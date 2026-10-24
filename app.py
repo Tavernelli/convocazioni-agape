@@ -73,7 +73,6 @@ def crea_distinta_excel(
         ws = wb.create_sheet(title=nome_sheet)
         ws.views.sheetView[0].showGridLines = True
 
-        # Larghezze colonna ottimizzate
         col_widths = {
             'A': 4.5, 'B': 4.5, 'C': 4.5, 'D': 6.5, 'E': 14.5, 'F': 12, 'G': 10, 'H': 10, 'I': 4.5, 'J': 4.5, 'K': 4.5,
             'L': 4.5, 'M': 4.5, 'N': 4.5, 'O': 6.5, 'P': 14.5, 'Q': 10, 'R': 10, 'S': 12, 'T': 4.5, 'U': 6.5, 'V': 6.5
@@ -81,14 +80,12 @@ def crea_distinta_excel(
         for col_letter, width in col_widths.items():
             ws.column_dimensions[col_letter].width = width
 
-        # Altezze riga
         ws.row_dimensions[1].height = 22
         ws.row_dimensions[2].height = 28
         ws.row_dimensions[3].height = 20
         ws.row_dimensions[4].height = 18
         ws.row_dimensions[5].height = 18
 
-        # Esteso A1:E1 per contenere completamente "F.I.G.C. - Delegazione Provinciale/Distrettuale di"
         ws.merge_cells("A1:E1")
         ws["A1"] = "F.I.G.C. - Delegazione Provinciale/Distrettuale di"
         ws["A1"].font = f_sub
@@ -183,7 +180,6 @@ def crea_distinta_excel(
         ws["E4"].font = f_sub
         ws["E4"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-        # SQUADRA A: COGNOME e NOME
         ws.merge_cells("F4:F5")
         ws["F4"] = "COGNOME"
         ws["F4"].font = f_sub
@@ -228,7 +224,6 @@ def crea_distinta_excel(
         ws["P4"].font = f_sub
         ws["P4"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-        # SQUADRA B: COGNOME e NOME
         ws.merge_cells("Q4:R5")
         ws["Q4"] = "COGNOME"
         ws["Q4"].font = f_sub
@@ -284,7 +279,6 @@ def crea_distinta_excel(
         for r_extra in range(18, 28):
             ws.row_dimensions[r_extra].height = 18
 
-        # SQUADRA A - STAFF
         ws.merge_cells("A18:D18")
         ws["A18"] = "TECNICO A d B."
         ws["A18"].font = f_sub
@@ -318,7 +312,6 @@ def crea_distinta_excel(
         ws["H20"].font = f_sub
         ws["H20"].alignment = Alignment(horizontal="left", vertical="center")
 
-        # SQUADRA B - STAFF
         ws.merge_cells("L18:O18")
         ws["L18"] = "TECNICO A.d.B."
         ws["L18"].font = f_sub
@@ -488,13 +481,9 @@ if modalita_conv == "☑️ Manuale (Seleziona Giocatori con Checkbox)":
         scelti_b = st.multiselect("Scegli i giocatori del Gruppo Blu:", opzioni_blu, key="m_blu")
         squadra_blu_scelta = [mppa_giocatori[x] for x in scelti_b]
 
-gen_distinta_r = False
-gen_distinta_b = False
-
 if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔴 Solo Gruppo Rosso"]:
     st.markdown("---")
     st.header("🔴 PARAMETRI GARA GRUPPO ROSSO")
-    gen_distinta_r = st.checkbox("Genera Distinta per Gruppo Rosso", value=True)
     data_r = st.text_input("📅 Data Gara Rosso (es. 24/10/2026)", "24/10/2026")
     avversario_r = st.text_input("Avversario Rosso", "SAN BIAGIO PROMANO")
     in_casa_r = st.checkbox("Gioca in Casa (Rosso)", value=False)
@@ -519,7 +508,6 @@ else:
 if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔵 Solo Gruppo Blu"]:
     st.markdown("---")
     st.header("🔵 PARAMETRI GARA GRUPPO BLU")
-    gen_distinta_b = st.checkbox("Genera Distinta per Gruppo Blu", value=True)
     data_b = st.text_input("📅 Data Gara Blu (es. 25/10/2026)", "25/10/2026")
     avversario_b = st.text_input("Avversario Blu", "CANNARA")
     in_casa_b = st.checkbox("Gioca in Casa (Blu)", value=False)
@@ -558,7 +546,8 @@ if st.button("⚡ GENERATE CONVOCAZIONI / DISTINTA", type="primary", use_contain
         casa_b = "AGAPE UMBERTIDE PIERANTONIO 🔴🔵" if in_casa_b else avversario_b
         trasf_b = avversario_b if in_casa_b else "AGAPE UMBERTIDE PIERANTONIO 🔴🔵"
 
-        if tipo_output in ["Tutto (Match Day + Convocazione + Distinta Excel)", "Solo Testi (Match Day + Convocazione)", "Solo Distinta Excel"]:
+        # Genera i testi SOLO SE richiesto dal menu a tendina
+        if tipo_output in ["Tutto (Match Day + Convocazione + Distinta Excel)", "Solo Testi (Match Day + Convocazione)"]:
             matchday_blocks = []
             convocazioni_blocks = []
 
@@ -580,8 +569,8 @@ if st.button("⚡ GENERATE CONVOCAZIONI / DISTINTA", type="primary", use_contain
             st.code(convocazione_txt, language=None)
 
         if tipo_output in ["Tutto (Match Day + Convocazione + Distinta Excel)", "Solo Distinta Excel"]:
-            gen_r = gen_distinta_r if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔴 Solo Gruppo Rosso"] else False
-            gen_b = gen_distinta_b if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔵 Solo Gruppo Blu"] else False
+            gen_r = squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔴 Solo Gruppo Rosso"]
+            gen_b = squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔵 Solo Gruppo Blu"]
 
             excel_data = crea_distinta_excel(
                 rossa, blu, gen_r, gen_b, delegazione, stagione, categoria, anno, modalita, luogo, num_gare,
