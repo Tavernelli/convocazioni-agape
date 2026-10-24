@@ -73,30 +73,31 @@ def crea_distinta_excel(
         ws = wb.create_sheet(title=nome_sheet)
         ws.views.sheetView[0].showGridLines = True
 
-        # Larghezza colonne ottimizzata
+        # Larghezze colonna ottimizzate
         col_widths = {
-            'A': 4,   'B': 4,   'C': 4,   'D': 6,   'E': 14,  'F': 12,  'G': 10,  'H': 10,  'I': 4,   'J': 4,   'K': 4,
-            'L': 4,   'M': 4,   'N': 4,   'O': 6,   'P': 14,  'Q': 10,  'R': 10,  'S': 12,  'T': 4,   'U': 4,   'V': 4
+            'A': 4.5, 'B': 4.5, 'C': 4.5, 'D': 6.5, 'E': 14.5, 'F': 12, 'G': 10, 'H': 10, 'I': 4.5, 'J': 4.5, 'K': 4.5,
+            'L': 4.5, 'M': 4.5, 'N': 4.5, 'O': 6.5, 'P': 14.5, 'Q': 10, 'R': 10, 'S': 12, 'T': 4.5, 'U': 6.5, 'V': 6.5
         }
         for col_letter, width in col_widths.items():
             ws.column_dimensions[col_letter].width = width
 
-        # Altezza righe
+        # Altezze riga
         ws.row_dimensions[1].height = 22
         ws.row_dimensions[2].height = 28
         ws.row_dimensions[3].height = 20
         ws.row_dimensions[4].height = 18
         ws.row_dimensions[5].height = 18
 
-        ws.merge_cells("A1:C1")
-        ws["A1"] = f"F.I.G.C. - Delegazione Provinciale/Distrettuale di"
+        # Esteso A1:E1 per contenere completamente "F.I.G.C. - Delegazione Provinciale/Distrettuale di"
+        ws.merge_cells("A1:E1")
+        ws["A1"] = "F.I.G.C. - Delegazione Provinciale/Distrettuale di"
         ws["A1"].font = f_sub
         ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
 
-        ws.merge_cells("D1:R1")
-        ws["D1"] = delegazione.upper()
-        ws["D1"].font = f_title
-        ws["D1"].alignment = Alignment(horizontal="left", vertical="center")
+        ws.merge_cells("F1:R1")
+        ws["F1"] = delegazione.upper()
+        ws["F1"].font = f_title
+        ws["F1"].alignment = Alignment(horizontal="left", vertical="center")
 
         ws.merge_cells("S1:T1")
         ws["S1"] = "STAGIONE"
@@ -283,56 +284,88 @@ def crea_distinta_excel(
         for r_extra in range(18, 28):
             ws.row_dimensions[r_extra].height = 18
 
-        ws.merge_cells("A18:C18")
+        # SQUADRA A - STAFF
+        ws.merge_cells("A18:D18")
         ws["A18"] = "TECNICO A d B."
-        ws.merge_cells("D18:G18")
+        ws["A18"].font = f_sub
+        ws["A18"].alignment = Alignment(horizontal="left", vertical="center")
+        
+        ws.merge_cells("E18:G18")
         ws.merge_cells("H18:K18")
         ws["H18"] = "Tess. N°"
+        ws["H18"].font = f_sub
+        ws["H18"].alignment = Alignment(horizontal="left", vertical="center")
 
-        ws.merge_cells("L18:N18")
-        ws["L18"] = "TECNICO A.d.B."
-        ws.merge_cells("O18:R18")
-        ws.merge_cells("S18:V18")
-        ws["S18"] = "Tess. N°"
-
-        ws.merge_cells("A19:C19")
+        ws.merge_cells("A19:D19")
         ws["A19"] = "DIRIGENTE ACC."
-        ws.merge_cells("D19:G19")
+        ws["A19"].font = f_sub
+        ws["A19"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("E19:G19")
         ws.merge_cells("H19:K19")
         ws["H19"] = "Tess. N°"
+        ws["H19"].font = f_sub
+        ws["H19"].alignment = Alignment(horizontal="left", vertical="center")
 
-        ws.merge_cells("L19:N19")
-        ws["L19"] = "DIRIGENTE ACC."
-        ws.merge_cells("O19:R19")
-        ws.merge_cells("S19:V19")
-        ws["S19"] = "Tess. N°"
-
-        ws.merge_cells("A20:C20")
+        ws.merge_cells("A20:D20")
         ws["A20"] = "GUARDALINEE"
-        ws.merge_cells("D20:G20")
+        ws["A20"].font = f_sub
+        ws["A20"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("E20:G20")
         ws.merge_cells("H20:K20")
         ws["H20"] = "Tess. N°"
+        ws["H20"].font = f_sub
+        ws["H20"].alignment = Alignment(horizontal="left", vertical="center")
 
-        ws.merge_cells("L20:N20")
+        # SQUADRA B - STAFF
+        ws.merge_cells("L18:O18")
+        ws["L18"] = "TECNICO A.d.B."
+        ws["L18"].font = f_sub
+        ws["L18"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("P18:R18")
+        ws.merge_cells("S18:V18")
+        ws["S18"] = "Tess. N°"
+        ws["S18"].font = f_sub
+        ws["S18"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L19:O19")
+        ws["L19"] = "DIRIGENTE ACC."
+        ws["L19"].font = f_sub
+        ws["L19"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("P19:R19")
+        ws.merge_cells("S19:V19")
+        ws["S19"] = "Tess. N°"
+        ws["S19"].font = f_sub
+        ws["S19"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L20:O20")
         ws["L20"] = "GUARDALINEE"
-        ws.merge_cells("O20:R20")
+        ws["L20"].font = f_sub
+        ws["L20"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("P20:R20")
         ws.merge_cells("S20:V20")
         ws["S20"] = "Tess. N°"
+        ws["S20"].font = f_sub
+        ws["S20"].alignment = Alignment(horizontal="left", vertical="center")
 
         if deve_compilare:
             if is_my_team_a:
-                ws["D18"] = tecnico
+                ws["E18"] = tecnico
                 ws["H18"] = f"Tess. N° {tess_tec}" if tess_tec else "Tess. N°"
-                ws["D19"] = dirigente
+                ws["E19"] = dirigente
                 ws["H19"] = f"Tess. N° {tess_dir}" if tess_dir else "Tess. N°"
-                ws["D20"] = guardalinee
+                ws["E20"] = guardalinee
                 ws["H20"] = f"Tess. N° {tess_gua}" if tess_gua else "Tess. N°"
             else:
-                ws["O18"] = tecnico
+                ws["P18"] = tecnico
                 ws["S18"] = f"Tess. N° {tess_tec}" if tess_tec else "Tess. N°"
-                ws["O19"] = dirigente
+                ws["P19"] = dirigente
                 ws["S19"] = f"Tess. N° {tess_dir}" if tess_dir else "Tess. N°"
-                ws["O20"] = guardalinee
+                ws["P20"] = guardalinee
                 ws["S20"] = f"Tess. N° {tess_gua}" if tess_gua else "Tess. N°"
 
         ws.merge_cells("A21:K21")
@@ -525,7 +558,7 @@ if st.button("⚡ GENERATE CONVOCAZIONI / DISTINTA", type="primary", use_contain
         casa_b = "AGAPE UMBERTIDE PIERANTONIO 🔴🔵" if in_casa_b else avversario_b
         trasf_b = avversario_b if in_casa_b else "AGAPE UMBERTIDE PIERANTONIO 🔴🔵"
 
-        if tipo_output in ["Tutto (Match Day + Convocazione + Distinta Excel)", "Solo Testi (Match Day + Convocazione)"]:
+        if tipo_output in ["Tutto (Match Day + Convocazione + Distinta Excel)", "Solo Testi (Match Day + Convocazione)", "Solo Distinta Excel"]:
             matchday_blocks = []
             convocazioni_blocks = []
 
