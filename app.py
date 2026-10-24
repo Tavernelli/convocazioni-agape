@@ -73,6 +73,21 @@ def crea_distinta_excel(
         ws = wb.create_sheet(title=nome_sheet)
         ws.views.sheetView[0].showGridLines = True
 
+        # Larghezza colonne ottimizzata
+        col_widths = {
+            'A': 4,   'B': 4,   'C': 4,   'D': 6,   'E': 14,  'F': 12,  'G': 10,  'H': 10,  'I': 4,   'J': 4,   'K': 4,
+            'L': 4,   'M': 4,   'N': 4,   'O': 6,   'P': 14,  'Q': 10,  'R': 10,  'S': 12,  'T': 4,   'U': 4,   'V': 4
+        }
+        for col_letter, width in col_widths.items():
+            ws.column_dimensions[col_letter].width = width
+
+        # Altezza righe
+        ws.row_dimensions[1].height = 22
+        ws.row_dimensions[2].height = 28
+        ws.row_dimensions[3].height = 20
+        ws.row_dimensions[4].height = 18
+        ws.row_dimensions[5].height = 18
+
         ws.merge_cells("A1:C1")
         ws["A1"] = f"F.I.G.C. - Delegazione Provinciale/Distrettuale di"
         ws["A1"].font = f_sub
@@ -157,7 +172,7 @@ def crea_distinta_excel(
 
         ws["B5"] = "GG"
         ws["C5"] = "MM"
-        ws["D5"] = "AA"
+        ws["D5"] = "AAAA"
         for c in ["B5", "C5", "D5"]:
             ws[c].font = f_sub
             ws[c].alignment = Alignment(horizontal="center", vertical="center")
@@ -165,7 +180,7 @@ def crea_distinta_excel(
         ws.merge_cells("E4:E5")
         ws["E4"] = "N° CARTELLINO"
         ws["E4"].font = f_sub
-        ws["E4"].alignment = Alignment(horizontal="center", vertical="center")
+        ws["E4"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
         # SQUADRA A: COGNOME e NOME
         ws.merge_cells("F4:F5")
@@ -202,7 +217,7 @@ def crea_distinta_excel(
 
         ws["M5"] = "GG"
         ws["N5"] = "MM"
-        ws["O5"] = "AA"
+        ws["O5"] = "AAAA"
         for c in ["M5", "N5", "O5"]:
             ws[c].font = f_sub
             ws[c].alignment = Alignment(horizontal="center", vertical="center")
@@ -210,7 +225,7 @@ def crea_distinta_excel(
         ws.merge_cells("P4:P5")
         ws["P4"] = "N° CARTELLINO"
         ws["P4"].font = f_sub
-        ws["P4"].alignment = Alignment(horizontal="center", vertical="center")
+        ws["P4"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
         # SQUADRA B: COGNOME e NOME
         ws.merge_cells("Q4:R5")
@@ -240,6 +255,7 @@ def crea_distinta_excel(
 
         for r in range(1, 13):
             row_idx = r + 5
+            ws.row_dimensions[row_idx].height = 18
             ws.cell(row=row_idx, column=1, value=r).alignment = Alignment(horizontal="center", vertical="center")
             ws.cell(row=row_idx, column=12, value=r).alignment = Alignment(horizontal="center", vertical="center")
             
@@ -249,20 +265,23 @@ def crea_distinta_excel(
             g_data = convocati[r-1] if (r <= len(convocati) and deve_compilare) else None
 
             if is_my_team_a and g_data:
-                ws.cell(row=row_idx, column=2, value=g_data.get("g", "")).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=3, value=g_data.get("m", "")).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=4, value=str(g_data.get("a", ""))[-2:]).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=5, value=g_data.get("Tesserino", "")).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=6, value=g_data.get("Cognome", ""))
-                ws.cell(row=row_idx, column=7, value=g_data.get("Nome", ""))
+                ws.cell(row=row_idx, column=2, value=g_data.get("g", "")).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=3, value=g_data.get("m", "")).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=4, value=str(g_data.get("a", ""))).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=5, value=g_data.get("Tesserino", "")).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=6, value=g_data.get("Cognome", "")).alignment = Alignment(horizontal="left", vertical="center")
+                ws.cell(row=row_idx, column=7, value=g_data.get("Nome", "")).alignment = Alignment(horizontal="left", vertical="center")
 
             if (not is_my_team_a) and g_data:
-                ws.cell(row=row_idx, column=13, value=g_data.get("g", "")).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=14, value=g_data.get("m", "")).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=15, value=str(g_data.get("a", ""))[-2:]).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=16, value=g_data.get("Tesserino", "")).alignment = Alignment(horizontal="center")
-                ws.cell(row=row_idx, column=17, value=g_data.get("Cognome", ""))
-                ws.cell(row=row_idx, column=19, value=g_data.get("Nome", ""))
+                ws.cell(row=row_idx, column=13, value=g_data.get("g", "")).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=14, value=g_data.get("m", "")).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=15, value=str(g_data.get("a", ""))).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=16, value=g_data.get("Tesserino", "")).alignment = Alignment(horizontal="center", vertical="center")
+                ws.cell(row=row_idx, column=17, value=g_data.get("Cognome", "")).alignment = Alignment(horizontal="left", vertical="center")
+                ws.cell(row=row_idx, column=19, value=g_data.get("Nome", "")).alignment = Alignment(horizontal="left", vertical="center")
+
+        for r_extra in range(18, 28):
+            ws.row_dimensions[r_extra].height = 18
 
         ws.merge_cells("A18:C18")
         ws["A18"] = "TECNICO A d B."
