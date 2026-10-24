@@ -1,23 +1,57 @@
 import json
 import random
+import io
+import os
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side
 import streamlit as st
 
-st.set_page_config(page_title="Convocazioni Agape", page_icon="⚽", layout="centered")
+st.set_page_config(page_title="Convocazioni e Distinta Agape", page_icon="⚽", layout="centered")
 
-# Carica la rosa dal file esterno "giocatori.json"
+ROSA_DEFAULT = [
+    {"Cognome": "Ciambriello", "Nome": "Samuel", "g": 12, "m": 12, "a": 2019, "Tesserino": "4772723", "Livello": "Avanzato"},
+    {"Cognome": "Ercoli", "Nome": "Leonardo", "g": 16, "m": 4, "a": 2019, "Tesserino": "4540799", "Livello": "Avanzato"},
+    {"Cognome": "Gogu", "Nome": "Alexandru", "g": 15, "m": 5, "a": 2019, "Tesserino": "4691456", "Livello": "Avanzato"},
+    {"Cognome": "Ligi", "Nome": "Edoardo", "g": 9, "m": 4, "a": 2019, "Tesserino": "4540801", "Livello": "Avanzato"},
+    {"Cognome": "Minelli", "Nome": "Riccardo", "g": 18, "m": 12, "a": 2019, "Tesserino": "4540683", "Livello": "Avanzato"},
+    {"Cognome": "Tuorres", "Nome": "Giovanni", "g": 24, "m": 7, "a": 2019, "Tesserino": "4540776", "Livello": "Avanzato"},
+    {"Cognome": "Giulietti", "Nome": "Edoardo", "g": 23, "m": 7, "a": 2019, "Tesserino": "4540788", "Livello": "Avanzato"},
+    {"Cognome": "Carini", "Nome": "Raffaele", "g": 27, "m": 11, "a": 2019, "Tesserino": "4772729", "Livello": "Avanzato"},
+    {"Cognome": "Ubaldi", "Nome": "Mattia", "g": 6, "m": 12, "a": 2019, "Tesserino": "4772737", "Livello": "Intermedio"},
+    {"Cognome": "Boccia", "Nome": "Michele", "g": 16, "m": 4, "a": 2019, "Tesserino": "4540640", "Livello": "Intermedio"},
+    {"Cognome": "Floridi", "Nome": "Tommaso", "g": 25, "m": 8, "a": 2019, "Tesserino": "4547033", "Livello": "Intermedio"},
+    {"Cognome": "Kapllani", "Nome": "Gabriel", "g": 12, "m": 9, "a": 2019, "Tesserino": "4540804", "Livello": "Intermedio"},
+    {"Cognome": "Fiorucci", "Nome": "Alessio", "g": 18, "m": 6, "a": 2019, "Tesserino": "4540793", "Livello": "Intermedio"},
+    {"Cognome": "Amantini", "Nome": "Filippo", "g": 22, "m": 3, "a": 2019, "Tesserino": "4540478", "Livello": "Intermedio"},
+    {"Cognome": "Cuni", "Nome": "Rayan", "g": 7, "m": 8, "a": 2019, "Tesserino": "4980104", "Livello": "Intermedio"},
+    {"Cognome": "Xhafa", "Nome": "Viktor", "g": 1, "m": 8, "a": 2019, "Tesserino": "4540778", "Livello": "Intermedio"},
+    {"Cognome": "Jaid", "Nome": "Anuar", "g": 10, "m": 10, "a": 2019, "Tesserino": "4914104", "Livello": "Base"},
+    {"Cognome": "Ademaj", "Nome": "Brando", "g": 6, "m": 6, "a": 2019, "Tesserino": "4615962", "Livello": "Base"},
+    {"Cognome": "Amir", "Nome": "Titi", "g": 1, "m": 1, "a": 2019, "Tesserino": "4980106", "Livello": "Base"},
+    {"Cognome": "Biancalana", "Nome": "Mattia", "g": 26, "m": 9, "a": 2019, "Tesserino": "4712310", "Livello": "Base"},
+    {"Cognome": "Carlini", "Nome": "Giulio", "g": 15, "m": 3, "a": 2019, "Tesserino": "4772735", "Livello": "Base"},
+    {"Cognome": "Mambrucchi", "Nome": "Gregorio", "g": 4, "m": 12, "a": 2019, "Tesserino": "4772733", "Livello": "Base"},
+    {"Cognome": "Ouazine", "Nome": "Sayf Eddine", "g": 20, "m": 11, "a": 2019, "Tesserino": "4865402", "Livello": "Base"}
+]
+
 @st.cache_data
 def carica_rosa():
+    if os.path.exists("giocatori.json"):
+        try:
+            with open("giocatori.json", "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
     try:
-        with open("giocatori.json", "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        st.error("Errore: Il file 'giocatori.json' non è stato trovato!")
-        return []
+        rosa_json = st.secrets["GIOCATORI_JSON"]
+        return json.loads(rosa_json)
+    except Exception:
+        return ROSA_DEFAULT
 
 ROSA = carica_rosa()
-MIA_SQUADRA = "AGAPE UMBERTIDE PIERANTONIO 🔴🔵"
+MIA_SQUADRA = "AGAPE UMBERTIDE PIERANTONIO"
 
-def genera_convocazione(rosa):
+def genera_convocazione_random(rosa):
     avanzati = [g for g in rosa if g["Livello"] == "Avanzato"]
     intermedi = [g for g in rosa if g["Livello"] == "Intermedio"]
     base = [g for g in rosa if g["Livello"] == "Base"]
@@ -26,9 +60,7 @@ def genera_convocazione(rosa):
     random.shuffle(intermedi)
     random.shuffle(base)
     
-    # Squadra Rossa (12): 4-4-4
     squadra_rossa = avanzati[:4] + intermedi[:4] + base[:4]
-    # Squadra Blu (11): 4-4-3
     squadra_blu = avanzati[4:] + intermedi[4:] + base[4:]
     
     return squadra_rossa, squadra_blu
@@ -36,69 +68,439 @@ def genera_convocazione(rosa):
 def formatta_giocatori(giocatori):
     return "\n".join([f"- {g['Cognome']} {g['Nome']}" for g in giocatori])
 
-st.title("⚽ Convocazioni AGAPE")
-st.write("Compila i campi e premi il pulsante per generare i messaggi per WhatsApp.")
+def crea_distinta_excel(squadra_rossa, squadra_blu, genera_distinta_r, genera_distinta_b, data_gara, delegazione, stagione, categoria, anno, modalita, luogo, num_gare, avversario_rosso, in_casa_rosso, avversario_blu, in_casa_blu, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b):
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
 
-data_gara = st.text_input("📅 Data Gara", "SABATO 28 OTTOBRE")
+    thin = Side(style='thin', color='000000')
+    border_thin = Border(left=thin, right=thin, top=thin, bottom=thin)
+    
+    f_title = Font(name="Arial", size=9, bold=True)
+    f_sub = Font(name="Arial", size=8, bold=True)
+    f_norm = Font(name="Arial", size=8)
+    f_small = Font(name="Arial", size=7)
+    f_val = Font(name="Arial", size=8, bold=True)
+
+    gruppi_data = [
+        ("GRUPPO ROSSO", squadra_rossa, avversario_rosso, in_casa_rosso, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r, genera_distinta_r),
+        ("GRUPPO BLU", squadra_blu, avversario_blu, in_casa_blu, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b, genera_distinta_b)
+    ]
+
+    for nome_sheet, convocati, avversario, in_casa, tecnico, tess_tec, dirigente, tess_dir, da_generare in gruppi_data:
+        if not da_generare:
+            continue
+
+        ws = wb.create_sheet(title=nome_sheet)
+        ws.views.sheetView[0].showGridLines = True
+
+        ws.merge_cells("A1:C1")
+        ws["A1"] = f"F.I.G.C. - Delegazione Provinciale/Distrettuale di"
+        ws["A1"].font = f_sub
+        ws["A1"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("D1:R1")
+        ws["D1"] = delegazione.upper()
+        ws["D1"].font = f_title
+        ws["D1"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("S1:T1")
+        ws["S1"] = "STAGIONE"
+        ws["S1"].font = f_sub
+        ws["S1"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("U1:V1")
+        ws["U1"] = stagione
+        ws["U1"].font = f_val
+        ws["U1"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("A2:C2")
+        ws["A2"] = f"CATEG. {categoria}\nANNO {anno}"
+        ws["A2"].font = f_sub
+        ws["A2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws["D2"] = "Girone"
+        ws["D2"].font = f_sub
+        ws["D2"].alignment = Alignment(horizontal="center", vertical="center")
+
+        sq_a = MIA_SQUADRA if in_casa else avversario
+        sq_b = avversario if in_casa else MIA_SQUADRA
+
+        ws.merge_cells("E2:K2")
+        ws["E2"] = f"INCONTRO/CONFRONTO\n{sq_a} - {sq_b}"
+        ws["E2"].font = f_sub
+        ws["E2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.merge_cells("L2:M2")
+        ws["L2"] = luogo
+        ws["L2"].font = f_val
+        ws["L2"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("N2:O2")
+        ws["N2"] = f"DATA\n{data_gara}"
+        ws["N2"].font = f_sub
+        ws["N2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.merge_cells("P2:Q2")
+        ws["P2"] = f"MODALITA' DI GIOCO\n{modalita}"
+        ws["P2"].font = f_sub
+        ws["P2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.merge_cells("R2:T2")
+        ws["R2"] = f"MULTIPARTITA\nGARE  {num_gare}"
+        ws["R2"].font = f_sub
+        ws["R2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.merge_cells("U2:V2")
+        ws["U2"] = "RISULTATO\n "
+        ws["U2"].font = f_sub
+        ws["U2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+        ws.merge_cells("A3:K3")
+        ws["A3"] = 'S Q U A D R A "A"'
+        ws["A3"].font = f_title
+        ws["A3"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("L3:V3")
+        ws["L3"] = 'S Q U A D R A "B"'
+        ws["L3"].font = f_title
+        ws["L3"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("A4:A5")
+        ws["A4"] = "N°"
+        ws["A4"].font = f_sub
+        ws["A4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("B4:D4")
+        ws["B4"] = "DATA DI NASCITA"
+        ws["B4"].font = f_sub
+        ws["B4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws["B5"] = "GG"
+        ws["C5"] = "MM"
+        ws["D5"] = "AA"
+        for c in ["B5", "C5", "D5"]:
+            ws[c].font = f_sub
+            ws[c].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("E4:E5")
+        ws["E4"] = "N° CARTELLINO"
+        ws["E4"].font = f_sub
+        ws["E4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("F4:F5")
+        ws["F4"] = "COGNOME"
+        ws["F4"].font = f_sub
+        ws["F4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("G4:H4")
+        ws["G4"] = "NOME"
+        ws["G4"].font = f_sub
+        ws["G4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("I4:K4")
+        ws["I4"] = "Presenza"
+        ws["I4"].font = f_sub
+        ws["I4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws["I5"] = "1T"
+        ws["J5"] = "2T"
+        ws["K5"] = "3T"
+        for c in ["I5", "J5", "K5"]:
+            ws[c].font = f_sub
+            ws[c].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("L4:L5")
+        ws["L4"] = "N°"
+        ws["L4"].font = f_sub
+        ws["L4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("M4:O4")
+        ws["M4"] = "DATA DI NASCITA"
+        ws["M4"].font = f_sub
+        ws["M4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws["M5"] = "GG"
+        ws["N5"] = "MM"
+        ws["O5"] = "AA"
+        for c in ["M5", "N5", "O5"]:
+            ws[c].font = f_sub
+            ws[c].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("P4:P5")
+        ws["P4"] = "N° CARTELLINO"
+        ws["P4"].font = f_sub
+        ws["P4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("Q4:R4")
+        ws["Q4"] = "COGNOME"
+        ws["Q4"].font = f_sub
+        ws["Q4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("S4:S5")
+        ws["S4"] = "NOME"
+        ws["S4"].font = f_sub
+        ws["S4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws.merge_cells("T4:V4")
+        ws["T4"] = "Presenza"
+        ws["T4"].font = f_sub
+        ws["T4"].alignment = Alignment(horizontal="center", vertical="center")
+
+        ws["T5"] = "1T"
+        ws["U5"] = "2T"
+        ws["V5"] = "3T"
+        for c in ["T5", "U5", "V5"]:
+            ws[c].font = f_sub
+            ws[c].alignment = Alignment(horizontal="center", vertical="center")
+
+        is_my_team_a = in_casa
+        deve_compilare = (not in_casa)
+
+        for r in range(1, 13):
+            row_idx = r + 5
+            ws.cell(row=row_idx, column=1, value=r).alignment = Alignment(horizontal="center", vertical="center")
+            ws.cell(row=row_idx, column=12, value=r).alignment = Alignment(horizontal="center", vertical="center")
+            
+            ws.merge_cells(start_row=row_idx, start_column=7, end_row=row_idx, end_column=8)
+            ws.merge_cells(start_row=row_idx, start_column=17, end_row=row_idx, end_column=18)
+
+            g_data = convocati[r-1] if (r <= len(convocati) and deve_compilare) else None
+
+            if is_my_team_a and g_data:
+                ws.cell(row=row_idx, column=2, value=g_data.get("g", "")).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=3, value=g_data.get("m", "")).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=4, value=str(g_data.get("a", ""))[-2:]).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=5, value=g_data.get("Tesserino", "")).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=6, value=g_data.get("Cognome", ""))
+                ws.cell(row=row_idx, column=7, value=g_data.get("Nome", ""))
+
+            if (not is_my_team_a) and g_data:
+                ws.cell(row=row_idx, column=13, value=g_data.get("g", "")).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=14, value=g_data.get("m", "")).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=15, value=str(g_data.get("a", ""))[-2:]).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=16, value=g_data.get("Tesserino", "")).alignment = Alignment(horizontal="center")
+                ws.cell(row=row_idx, column=17, value=g_data.get("Cognome", ""))
+                ws.cell(row=row_idx, column=19, value=g_data.get("Nome", ""))
+
+        ws.merge_cells("A18:C18")
+        ws["A18"] = "TECNICO A d B."
+        ws.merge_cells("D18:G18")
+        ws.merge_cells("H18:K18")
+        ws["H18"] = "Tess. N°"
+
+        ws.merge_cells("L18:N18")
+        ws["L18"] = "TECNICO A.d.B."
+        ws.merge_cells("O18:R18")
+        ws.merge_cells("S18:V18")
+        ws["S18"] = "Tess. N°"
+
+        ws.merge_cells("A19:C19")
+        ws["A19"] = "DIRIGENTE ACC."
+        ws.merge_cells("D19:G19")
+        ws.merge_cells("H19:K19")
+        ws["H19"] = "Tess. N°"
+
+        ws.merge_cells("L19:N19")
+        ws["L19"] = "DIRIGENTE ACC."
+        ws.merge_cells("O19:R19")
+        ws.merge_cells("S19:V19")
+        ws["S19"] = "Tess. N°"
+
+        ws.merge_cells("A20:C20")
+        ws["A20"] = "GUARDALINEE"
+        ws.merge_cells("D20:G20")
+        ws.merge_cells("H20:K20")
+        ws["H20"] = "Tess. N°"
+
+        ws.merge_cells("L20:N20")
+        ws["L20"] = "GUARDALINEE"
+        ws.merge_cells("O20:R20")
+        ws.merge_cells("S20:V20")
+        ws["S20"] = "Tess. N°"
+
+        if deve_compilare:
+            if is_my_team_a:
+                ws["D18"] = tecnico
+                ws["H18"] = f"Tess. N° {tess_tec}" if tess_tec else "Tess. N°"
+                ws["D19"] = dirigente
+                ws["H19"] = f"Tess. N° {tess_dir}" if tess_dir else "Tess. N°"
+            else:
+                ws["O18"] = tecnico
+                ws["S18"] = f"Tess. N° {tess_tec}" if tess_tec else "Tess. N°"
+                ws["O19"] = dirigente
+                ws["S19"] = f"Tess. N° {tess_dir}" if tess_dir else "Tess. N°"
+
+        ws.merge_cells("A21:K21")
+        ws["A21"] = "SQUADRA 'A' — DA COMPILARE A CURA DEL DIRIGENTE DELLA SQUADRA 'B'"
+        ws["A21"].font = f_sub
+        ws["A21"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("A22:K22")
+        ws["A22"] = "SALUTO INIZIO E FINE GARA:  [  ] SUFFICIENTE   [  ] BUONO   [  ] OTTIMO"
+        ws["A22"].font = f_small
+        ws["A22"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("A23:K23")
+        ws["A23"] = "COMPORTAMENTO DIRIGENTI SQ. 'A': [  ] INSUFFICIENTE [  ] SUFFICIENTE [  ] BUONO [  ] OTTIMO"
+        ws["A23"].font = f_small
+        ws["A23"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("A24:K24")
+        ws["A24"] = "COMPORTAMENTO PUBBLICO SQ. 'A':  [  ] INSUFFICIENTE [  ] SUFFICIENTE [  ] BUONO [  ] OTTIMO"
+        ws["A24"].font = f_small
+        ws["A24"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L21:V21")
+        ws["L21"] = "SQUADRA 'B' — DA COMPILARE A CURA DEL DIRIGENTE DELLA SQUADRA 'A'"
+        ws["L21"].font = f_sub
+        ws["L21"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L22:V22")
+        ws["L22"] = "SALUTO INIZIO E FINE GARA:  [  ] SUFFICIENTE   [  ] BUONO   [  ] OTTIMO"
+        ws["L22"].font = f_small
+        ws["L22"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L23:V23")
+        ws["L23"] = "COMPORTAMENTO DIRIGENTI SQ. 'B': [  ] INSUFFICIENTE [  ] SUFFICIENTE [  ] BUONO [  ] OTTIMO"
+        ws["L23"].font = f_small
+        ws["L23"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L24:V24")
+        ws["L24"] = "COMPORTAMENTO PUBBLICO SQ. 'B':  [  ] INSUFFICIENTE [  ] SUFFICIENTE [  ] BUONO [  ] OTTIMO"
+        ws["L24"].font = f_small
+        ws["L24"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("A25:K25")
+        ws.merge_cells("L25:V25")
+
+        ws.merge_cells("A26:K26")
+        ws["A26"] = "FIRMA DIRIGENTE SQUADRA 'A': ____________________________________"
+        ws["A26"].font = f_sub
+        ws["A26"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("L26:V26")
+        ws["L26"] = "FIRMA DIRIGENTE SQUADRA 'B': ____________________________________"
+        ws["L26"].font = f_sub
+        ws["L26"].alignment = Alignment(horizontal="left", vertical="center")
+
+        ws.merge_cells("A27:K27")
+        ws["A27"] = "Da consegnare in busta chiusa o mezzo posta entro le 48 ore successive alla gara."
+        ws["A27"].font = Font(name="Arial", size=7, italic=True)
+        ws["A27"].alignment = Alignment(horizontal="left", vertical="center")
+
+        for r_idx in range(1, 28):
+            for c_idx in range(1, 23):
+                cell = ws.cell(row=r_idx, column=c_idx)
+                cell.border = border_thin
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+st.title("⚽ Convocazioni & Distinta Ufficiale FIGC AGAPE")
+
+st.header("⚙️ Parametri Generali Gara")
+data_gara = st.text_input("📅 Data Gara (es. 24/10/2026)", "24/10/2026")
 ora_inizio = st.text_input("Rb Ora Inizio Gare", "15:00")
-
-st.markdown("---")
-st.subheader("🔴 GRUPPO ROSSO")
-avversario_rosso = st.text_input("Avversario Rosso", "Castel del Piano")
-in_casa_rosso = st.checkbox("Gioca in Casa (Rosso)", value=True)
-stadio_rosso = st.text_input("Stadio / Campo Rosso", "Stadio Comunale Umbertide")
-ritrovo_rosso = st.text_input("Ritrovo Rosso", "Campo Sportivo Umbertide")
-spogliatoio_rosso = st.text_input("Spogliatoio Rosso", "Spogliatoio 1")
-ora_conv_rossa = st.text_input("Ora Convocazione Rossa", "14:00")
-
-st.markdown("---")
-st.subheader("🔵 GRUPPO BLU")
-avversario_blu = st.text_input("Avversario Blu", "Cannara")
-in_casa_blu = st.checkbox("Gioca in Casa (Blu)", value=False)
-stadio_blu = st.text_input("Stadio / Campo Blu", "Stadio Spoletini Cannara")
-ritrovo_blu = st.text_input("Ritrovo Blu", "Piazzale Parcheggio Umbertide")
-spogliatoio_blu = st.text_input("Spogliatoio Blu", "Spogliatoio Ospiti")
-ora_conv_blu = st.text_input("Ora Convocazione Blu", "13:30")
+delegazione = st.text_input("Delegazione FIGC", "CITTA' DI CASTELLO")
+stagione = st.text_input("Stagione Sportiva", "26 / 27")
+categoria = st.text_input("Categoria", "PRIMI CALCI")
+anno = st.text_input("Anno Categoria", "2019")
+modalita = st.text_input("Modalità di Gioco", "5 vs 5")
+luogo = st.text_input("Luogo / Comune", "UMBERTIDE")
+num_gare = st.text_input("Numero Gare Multipartita", "3")
 
 st.markdown("---")
 
-if st.button("⚡ GENERATE MATCH DAY E CONVOCAZIONI", type="primary", use_container_width=True):
-    if not ROSA:
-        st.error("Nessun giocatore caricato.")
+# SELEZIONE MODALITÀ DI CONVOCAZIONE
+st.header("📋 Modalità di Selezione Convocati")
+modalita_conv = st.radio(
+    "Scegli come assegnare i giocatori alle squadre:",
+    ["🎲 Casuale / Bilanciato (Automatico)", "☑️ Manuale (Seleziona Giocatori con Checkbox)"]
+)
+
+opzioni_giocatori = [f"{g['Cognome']} {g['Nome']} ({g['Livello']})" for g in ROSA]
+mppa_giocatori = {f"{g['Cognome']} {g['Nome']} ({g['Livello']})": g for g in ROSA}
+
+squadra_rossa_scelta = []
+squadra_blu_scelta = []
+
+if modalita_conv == "☑️ Manuale (Seleziona Giocatori con Checkbox)":
+    st.subheader("🔴 Seleziona Giocatori per GRUPPO ROSSO")
+    scelti_r = st.multiselect("Scegli i giocatori del Gruppo Rosso:", opzioni_giocatori, key="m_rosso")
+    squadra_rossa_scelta = [mppa_giocatori[x] for x in scelti_r]
+
+    st.subheader("🔵 Seleziona Giocatori per GRUPPO BLU")
+    opzioni_blu = [x for x in opzioni_giocatori if x not in scelti_r]
+    scelti_b = st.multiselect("Scegli i giocatori del Gruppo Blu:", opzioni_blu, key="m_blu")
+    squadra_blu_scelta = [mppa_giocatori[x] for x in scelti_b]
+
+st.markdown("---")
+st.header("🔴 GRUPPO ROSSO")
+gen_distinta_r = st.checkbox("Genera Distinta per Gruppo Rosso", value=True)
+avversario_r = st.text_input("Avversario Rosso", "SAN BIAGIO PROMANO")
+in_casa_r = st.checkbox("Gioca in Casa (Rosso)", value=False)
+stadio_r = st.text_input("Stadio / Campo Rosso", "Stadio Comunale Umbertide")
+ritrovo_r = st.text_input("Ritrovo Rosso", "Campo Sportivo Umbertide")
+spogliatoio_r = st.text_input("Spogliatoio Rosso", "Spogliatoio 1")
+ora_conv_r = st.text_input("Ora Convocazione Rossa", "14:00")
+tecnico_r = st.text_input("Mister Rosso", "Sig. TAVERNELLI ANDREA")
+tess_tec_r = st.text_input("Tess. Mister Rosso", "191991")
+dirigente_r = st.text_input("Dirigente Acc. Rosso", "Sig. OUAZINE IHAB")
+tess_dir_r = st.text_input("Tess. Dirigente Rosso", "")
+
+st.markdown("---")
+st.header("🔵 GRUPPO BLU")
+gen_distinta_b = st.checkbox("Genera Distinta per Gruppo Blu", value=True)
+avversario_b = st.text_input("Avversario Blu", "CANNARA")
+in_casa_b = st.checkbox("Gioca in Casa (Blu)", value=False)
+stadio_b = st.text_input("Stadio / Campo Blu", "Stadio Spoletini Cannara")
+ritrovo_b = st.text_input("Ritrovo Blu", "Piazzale Parcheggio Umbertide")
+spogliatoio_b = st.text_input("Spogliatoio Blu", "Spogliatoio Ospiti")
+ora_conv_b = st.text_input("Ora Convocazione Blu", "13:30")
+tecnico_b = st.text_input("Mister Blu", "Sig. TAVERNELLI ANDREA")
+tess_tec_b = st.text_input("Tess. Mister Blu", "191991")
+dirigente_b = st.text_input("Dirigente Acc. Blu", "Sig. OUAZINE IHAB")
+tess_dir_b = st.text_input("Tess. Dirigente Blu", "")
+
+st.markdown("---")
+
+if st.button("⚡ GENERATE MATCH DAY, CONVOCAZIONI E DISTINTA", type="primary", use_container_width=True):
+    if modalita_conv == "🎲 Casuale / Bilanciato (Automatico)":
+        rossa, blu = genera_convocazione_random(ROSA)
     else:
-        rossa, blu = genera_convocazione(ROSA)
-        
-        casa_r = MIA_SQUADRA if in_casa_rosso else avversario_rosso
-        trasf_r = avversario_rosso if in_casa_rosso else MIA_SQUADRA
-        
-        casa_b = MIA_SQUADRA if in_casa_blu else avversario_blu
-        trasf_b = avversario_blu if in_casa_blu else MIA_SQUADRA
+        rossa, blu = squadra_rossa_scelta, squadra_blu_scelta
 
-        matchday_txt = f"""🔴GRUPPO ROSSO🔴
+    casa_r = "AGAPE UMBERTIDE PIERANTONIO 🔴🔵" if in_casa_r else avversario_r
+    trasf_r = avversario_r if in_casa_r else "AGAPE UMBERTIDE PIERANTONIO 🔴🔵"
+    
+    casa_b = "AGAPE UMBERTIDE PIERANTONIO 🔴🔵" if in_casa_b else avversario_b
+    trasf_b = avversario_b if in_casa_b else "AGAPE UMBERTIDE PIERANTONIO 🔴🔵"
+
+    matchday_txt = f"""🔴GRUPPO ROSSO🔴
 📅Match Day – {data_gara}
 ⚽ {casa_r} vs {trasf_r}
 Rb Inizio gara: {ora_inizio}
-📍 Stadio/Campo - {stadio_rosso}
+📍 Stadio/Campo - {stadio_r}
 
 
 🔵GRUPPO BLU🔵
-📅 Match Day – 
-{data_gara}
+📅 Match Day – {data_gara}
 ⚽ {casa_b} vs {trasf_b}
 Rb Inizio gara: ore {ora_inizio}
-📍 Stadio/Campo - {stadio_blu}"""
+📍 Stadio/Campo - {stadio_r if in_casa_b else stadio_b}"""
 
-        convocazione_txt = f"""📌 La convocazione seguirà nella giornata di giovedì:
+    convocazione_txt = f"""📌 La convocazione seguirà nella giornata di giovedì:
 
 📣 CONVOCAZIONE GARA
 GRUPPO ROSSO🔴
 📅 Data: {data_gara}
-⏰ Convocazione: ore {ora_conv_rossa}
-📍 Ritrovo: {ritrovo_rosso}
-🚿 Spogliatoio : {spogliatoio_rosso}
+⏰ Convocazione: ore {ora_conv_r}
+📍 Ritrovo: {ritrovo_r}
+🚿 Spogliatoio : {spogliatoio_r}
 
 🕑 Inizio gara: ore {ora_inizio}
-🏟️ Campo: {stadio_rosso}
+🏟️ Campo: {stadio_r}
 
 ⚔️ Gara: {casa_r} vs {trasf_r}
 
@@ -111,12 +513,12 @@ GRUPPO ROSSO🔴
 📣 CONVOCAZIONE GARA
 GRUPPO BLU 🔵
 📅 Data: {data_gara}
-⏰ Convocazione: {ora_conv_blu}
-📍 Ritrovo: {ritrovo_blu}
-🚿 Spogliatoio : {spogliatoio_blu}
+⏰ Convocazione: {ora_conv_b}
+📍 Ritrovo: {ritrovo_b}
+🚿 Spogliatoio : {spogliatoio_b}
 
 🕑 Inizio gara: ore {ora_inizio}
-🏟️ Campo: {stadio_blu}
+🏟️ Campo: {stadio_b}
 
 ⚔️ Gara: {casa_b} vs {trasf_b}
 
@@ -125,8 +527,24 @@ GRUPPO BLU 🔵
 
 📲 *RISPONDERE AL SONDAGGIO ENTRO VENERDÌ ALLE ORE 13:00*"""
 
-        st.subheader("1. Testo per Match Day")
-        st.code(matchday_txt, language=None)
-        
-        st.subheader("2. Testo Convocazioni (Giovedì)")
-        st.code(convocazione_txt, language=None)
+    st.subheader("1. Testo per Match Day")
+    st.code(matchday_txt, language=None)
+    
+    st.subheader("2. Testo Convocazioni (Giovedì)")
+    st.code(convocazione_txt, language=None)
+
+    excel_data = crea_distinta_excel(
+        rossa, blu, gen_distinta_r, gen_distinta_b, data_gara, delegazione, stagione, categoria, anno, modalita, luogo, num_gare,
+        avversario_r, in_casa_r, avversario_b, in_casa_b,
+        tecnico_r, tess_tec_r, dirigente_r, tess_dir_r,
+        tecnico_b, tess_tec_b, dirigente_b, tess_dir_b
+    )
+
+    st.subheader("3. Distinta Ufficiale FIGC (Excel)")
+    st.download_button(
+        label="📄 SCARICA DISTINTA UFFICIALE FIGC (EXCEL)",
+        data=excel_data,
+        file_name=f"Distinta_FIGC_{data_gara.replace('/', '-')}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        use_container_width=True
+    )
