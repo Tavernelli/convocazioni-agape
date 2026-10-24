@@ -43,7 +43,12 @@ def formatta_giocatori(giocatori):
         return "Nessun giocatore selezionato."
     return "\n".join([f"- {g['Cognome']} {g['Nome']}" for g in giocatori])
 
-def crea_distinta_excel(squadra_rossa, squadra_blu, genera_distinta_r, genera_distinta_b, data_gara, delegazione, stagione, categoria, anno, modalita, luogo, num_gare, avversario_rosso, in_casa_rosso, avversario_blu, in_casa_blu, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b):
+def crea_distinta_excel(
+    squadra_rossa, squadra_blu, genera_distinta_r, genera_distinta_b,
+    delegazione, stagione, categoria, anno, modalita, luogo, num_gare,
+    data_r, ora_inizio_r, avversario_rosso, in_casa_rosso, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r,
+    data_b, ora_inizio_b, avversario_blu, in_casa_blu, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b
+):
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
@@ -57,11 +62,11 @@ def crea_distinta_excel(squadra_rossa, squadra_blu, genera_distinta_r, genera_di
     f_val = Font(name="Arial", size=8, bold=True)
 
     gruppi_data = [
-        ("GRUPPO ROSSO", squadra_rossa, avversario_rosso, in_casa_rosso, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r, genera_distinta_r),
-        ("GRUPPO BLU", squadra_blu, avversario_blu, in_casa_blu, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b, genera_distinta_b)
+        ("GRUPPO ROSSO", squadra_rossa, data_r, avversario_rosso, in_casa_rosso, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r, genera_distinta_r),
+        ("GRUPPO BLU", squadra_blu, data_b, avversario_blu, in_casa_blu, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b, genera_distinta_b)
     ]
 
-    for nome_sheet, convocati, avversario, in_casa, tecnico, tess_tec, dirigente, tess_dir, da_generare in gruppi_data:
+    for nome_sheet, convocati, data_gara_g, avversario, in_casa, tecnico, tess_tec, dirigente, tess_dir, da_generare in gruppi_data:
         if not da_generare:
             continue
 
@@ -111,7 +116,7 @@ def crea_distinta_excel(squadra_rossa, squadra_blu, genera_distinta_r, genera_di
         ws["L2"].alignment = Alignment(horizontal="center", vertical="center")
 
         ws.merge_cells("N2:O2")
-        ws["N2"] = f"DATA\n{data_gara}"
+        ws["N2"] = f"DATA\n{data_gara_g}"
         ws["N2"].font = f_sub
         ws["N2"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
@@ -386,9 +391,7 @@ squadre_da_generare = st.radio(
 )
 
 st.markdown("---")
-st.header("⚙️ Parametri Generali Gara")
-data_gara = st.text_input("📅 Data Gara (es. 24/10/2026)", "24/10/2026")
-ora_inizio = st.text_input("Rb Ora Inizio Gare", "15:00")
+st.header("⚙️ Parametri Generali Categoria")
 delegazione = st.text_input("Delegazione FIGC", "CITTA' DI CASTELLO")
 stagione = st.text_input("Stagione Sportiva", "26 / 27")
 categoria = st.text_input("Categoria", "PRIMI CALCI")
@@ -430,8 +433,10 @@ gen_distinta_b = False
 
 if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔴 Solo Gruppo Rosso"]:
     st.markdown("---")
-    st.header("🔴 GRUPPO ROSSO")
+    st.header("🔴 PARAMETRI GARA GRUPPO ROSSO")
     gen_distinta_r = st.checkbox("Genera Distinta per Gruppo Rosso", value=True)
+    data_r = st.text_input("📅 Data Gara Rosso (es. 24/10/2026)", "24/10/2026")
+    ora_inizio_r = st.text_input("Ora Inizio Gara Rosso", "15:00")
     avversario_r = st.text_input("Avversario Rosso", "SAN BIAGIO PROMANO")
     in_casa_r = st.checkbox("Gioca in Casa (Rosso)", value=False)
     stadio_r = st.text_input("Stadio / Campo Rosso", "Stadio Comunale Umbertide")
@@ -443,24 +448,26 @@ if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔴 Solo Gruppo 
     dirigente_r = st.text_input("Dirigente Acc. Rosso", "Sig. OUAZINE IHAB")
     tess_dir_r = st.text_input("Tess. Dirigente Rosso", "")
 else:
-    avversario_r, in_casa_r, stadio_r, ritrovo_r, spogliatoio_r, ora_conv_r, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r = "", False, "", "", "", "", "", "", "", ""
+    data_r, ora_inizio_r, avversario_r, in_casa_r, stadio_r, ritrovo_r, spogliatoio_r, ora_conv_r, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r = "", "", "", False, "", "", "", "", "", "", "", ""
 
 if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔵 Solo Gruppo Blu"]:
     st.markdown("---")
-    st.header("🔵 GRUPPO BLU")
+    st.header("🔵 PARAMETRI GARA GRUPPO BLU")
     gen_distinta_b = st.checkbox("Genera Distinta per Gruppo Blu", value=True)
+    data_b = st.text_input("📅 Data Gara Blu (es. 25/10/2026)", "25/10/2026")
+    ora_inizio_b = st.text_input("Ora Inizio Gara Blu", "10:30")
     avversario_b = st.text_input("Avversario Blu", "CANNARA")
     in_casa_b = st.checkbox("Gioca in Casa (Blu)", value=False)
     stadio_b = st.text_input("Stadio / Campo Blu", "Stadio Spoletini Cannara")
     ritrovo_b = st.text_input("Ritrovo Blu", "Piazzale Parcheggio Umbertide")
     spogliatoio_b = st.text_input("Spogliatoio Blu", "Spogliatoio Ospiti")
-    ora_conv_b = st.text_input("Ora Convocazione Blu", "13:30")
+    ora_conv_b = st.text_input("Ora Convocazione Blu", "09:30")
     tecnico_b = st.text_input("Mister Blu", "Sig. TAVERNELLI ANDREA")
     tess_tec_b = st.text_input("Tess. Mister Blu", "191991")
     dirigente_b = st.text_input("Dirigente Acc. Blu", "Sig. OUAZINE IHAB")
     tess_dir_b = st.text_input("Tess. Dirigente Blu", "")
 else:
-    avversario_b, in_casa_b, stadio_b, ritrovo_b, spogliatoio_b, ora_conv_b, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b = "", False, "", "", "", "", "", "", "", ""
+    data_b, ora_inizio_b, avversario_b, in_casa_b, stadio_b, ritrovo_b, spogliatoio_b, ora_conv_b, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b = "", "", "", False, "", "", "", "", "", "", "", ""
 
 st.markdown("---")
 
@@ -484,12 +491,12 @@ if st.button("⚡ GENERATE CONVOCAZIONI / DISTINTA", type="primary", use_contain
             convocazioni_blocks = []
 
             if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔴 Solo Gruppo Rosso"]:
-                matchday_blocks.append(f"""🔴GRUPPO ROSSO🔴\n📅Match Day – {data_gara}\n⚽ {casa_r} vs {trasf_r}\nRb Inizio gara: {ora_inizio}\n📍 Stadio/Campo - {stadio_r}""")
-                convocazioni_blocks.append(f"""📣 CONVOCAZIONE GARA\nGRUPPO ROSSO🔴\n📅 Data: {data_gara}\n⏰ Convocazione: ore {ora_conv_r}\n📍 Ritrovo: {ritrovo_r}\n🚿 Spogliatoio : {spogliatoio_r}\n\n🕑 Inizio gara: ore {ora_inizio}\n🏟️ Campo: {stadio_r}\n\n⚔️ Gara: {casa_r} vs {trasf_r}\n\n👥 Convocati:\n{formatta_giocatori(rossa)}""")
+                matchday_blocks.append(f"""🔴GRUPPO ROSSO🔴\n📅Match Day – {data_r}\n⚽ {casa_r} vs {trasf_r}\nRb Inizio gara: ore {ora_inizio_r}\n📍 Stadio/Campo - {stadio_r}""")
+                convocazioni_blocks.append(f"""📣 CONVOCAZIONE GARA\nGRUPPO ROSSO🔴\n📅 Data: {data_r}\n⏰ Convocazione: ore {ora_conv_r}\n📍 Ritrovo: {ritrovo_r}\n🚿 Spogliatoio : {spogliatoio_r}\n\n🕑 Inizio gara: ore {ora_inizio_r}\n🏟️ Campo: {stadio_r}\n\n⚔️ Gara: {casa_r} vs {trasf_r}\n\n👥 Convocati:\n{formatta_giocatori(rossa)}""")
 
             if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔵 Solo Gruppo Blu"]:
-                matchday_blocks.append(f"""🔵GRUPPO BLU🔵\n📅 Match Day – {data_gara}\n⚽ {casa_b} vs {trasf_b}\nRb Inizio gara: ore {ora_inizio}\n📍 Stadio/Campo - {stadio_b}""")
-                convocazioni_blocks.append(f"""📣 CONVOCAZIONE GARA\nGRUPPO BLU 🔵\n📅 Data: {data_gara}\n⏰ Convocazione: {ora_conv_b}\n📍 Ritrovo: {ritrovo_b}\n🚿 Spogliatoio : {spogliatoio_b}\n\n🕑 Inizio gara: ore {ora_inizio}\n🏟️ Campo: {stadio_b}\n\n⚔️ Gara: {casa_b} vs {trasf_b}\n\n👥 Convocati:\n{formatta_giocatori(blu)}""")
+                matchday_blocks.append(f"""🔵GRUPPO BLU🔵\n📅 Match Day – {data_b}\n⚽ {casa_b} vs {trasf_b}\nRb Inizio gara: ore {ora_inizio_b}\n📍 Stadio/Campo - {stadio_b}""")
+                convocazioni_blocks.append(f"""📣 CONVOCAZIONE GARA\nGRUPPO BLU 🔵\n📅 Data: {data_b}\n⏰ Convocazione: ore {ora_conv_b}\n📍 Ritrovo: {ritrovo_b}\n🚿 Spogliatoio : {spogliatoio_b}\n\n🕑 Inizio gara: ore {ora_inizio_b}\n🏟️ Campo: {stadio_b}\n\n⚔️ Gara: {casa_b} vs {trasf_b}\n\n👥 Convocati:\n{formatta_giocatori(blu)}""")
 
             matchday_txt = "\n\n".join(matchday_blocks)
             convocazione_txt = "📌 La convocazione seguirà nella giornata di giovedì:\n\n" + "\n\n".join(convocazioni_blocks) + "\n\n📲 *RISPONDERE AL SONDAGGIO ENTRO VENERDÌ ALLE ORE 13:00*"
@@ -505,17 +512,17 @@ if st.button("⚡ GENERATE CONVOCAZIONI / DISTINTA", type="primary", use_contain
             gen_b = gen_distinta_b if squadre_da_generare in ["🔴🔵 Entrambe (Rosso e Blu)", "🔵 Solo Gruppo Blu"] else False
 
             excel_data = crea_distinta_excel(
-                rossa, blu, gen_r, gen_b, data_gara, delegazione, stagione, categoria, anno, modalita, luogo, num_gare,
-                avversario_r, in_casa_r, avversario_b, in_casa_b,
-                tecnico_r, tess_tec_r, dirigente_r, tess_dir_r,
-                tecnico_b, tess_tec_b, dirigente_b, tess_dir_b
+                rossa, blu, gen_r, gen_b, delegazione, stagione, categoria, anno, modalita, luogo, num_gare,
+                data_r, ora_inizio_r, avversario_r, in_casa_r, tecnico_r, tess_tec_r, dirigente_r, tess_dir_r,
+                data_b, ora_inizio_b, avversario_b, in_casa_b, tecnico_b, tess_tec_b, dirigente_b, tess_dir_b
             )
 
+            file_data_label = data_r if data_r else data_b
             st.subheader("3. Distinta Ufficiale FIGC (Excel)")
             st.download_button(
                 label="📄 SCARICA DISTINTA UFFICIALE FIGC (EXCEL)",
                 data=excel_data,
-                file_name=f"Distinta_FIGC_{data_gara.replace('/', '-')}.xlsx",
+                file_name=f"Distinta_FIGC_{file_data_label.replace('/', '-')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
             )
